@@ -884,6 +884,21 @@ SplineSet *SSttfApprox(SplineSet *ss) {
 return( ret );
 }
 
+SplineSet *SplineSetsTTFApprox(SplineSet *ss) {
+    SplineSet *head=NULL, *last, *cur;
+
+    while ( ss!=NULL ) {
+	cur = SSttfApprox(ss);
+	if ( head==NULL )
+	    head = cur;
+	else
+	    last->next = cur;
+	last = cur;
+	ss = ss->next;
+    }
+return( head );
+}
+
 static void ImproveB3CPForQuadratic(real from,real *_ncp,real *_pcp,real to) {
     real ncp = *_ncp, pcp = *_pcp;
     real noff, poff;
@@ -931,7 +946,7 @@ return;
     *_ncp = ncp;
     *_pcp = pcp;
 }
-    
+
 SplineSet *SSPSApprox(SplineSet *ss) {
     SplineSet *ret = chunkalloc(sizeof(SplineSet));
     Spline *spline, *first;
@@ -993,6 +1008,97 @@ SplineSet *SplineSetsPSApprox(SplineSet *ss) {
     }
 return( head );
 }
+
+
+void SCConvertLayerToOrder2(SplineChar *sc,int layer) {
+    SplineSet *new;
+
+    if ( sc==NULL )
+return;
+
+    new = SplineSetsTTFApprox(sc->layers[layer].splines);
+    SplinePointListsFree(sc->layers[layer].splines);
+    sc->layers[layer].splines = new;
+
+    sc->layers[layer].order2 = true;
+
+    MinimumDistancesFree(sc->md); sc->md = NULL;
+}
+
+void SCConvertToOrder2(SplineChar *sc) {
+    int layer;
+
+    if ( sc==NULL )
+return;
+
+    for ( layer=ly_back; layer<sc->layer_cnt; ++layer )
+	SCConvertLayerToOrder2(sc,layer);
+}
+
+static void SCConvertRefs(SplineChar *sc,int layer) {
+    RefChar *rf;
+
+    sc->ticked = true;
+    for ( rf=sc->layers[layer].refs; rf!=NULL; rf=rf->next ) {
+	if ( !rf->sc->ticked )
+	    SCConvertRefs(rf->sc,layer);
+	SCReinstanciateRefChar(sc,rf,layer);	/* Conversion is done by reinstanciating */
+		/* Since the base thing will have been converted, all we do is copy its data */
+    }
+}
+
+void SFConvertLayerToOrder2(SplineFont *_sf,int layer) {
+    int i, k;
+    SplineFont *sf;
+
+    if ( _sf->cidmaster!=NULL ) _sf=_sf->cidmaster;
+    k = 0;
+    do {
+	sf = _sf->subfonts==NULL ? _sf : _sf->subfonts[k];
+	for ( i=0; i<sf->glyphcnt; ++i ) if ( sf->glyphs[i]!=NULL ) {
+	    SCConvertLayerToOrder2(sf->glyphs[i],layer);
+	    sf->glyphs[i]->ticked = false;
+	    sf->glyphs[i]->changedsincelasthinted = false;
+	}
+	for ( i=0; i<sf->glyphcnt; ++i ) if ( sf->glyphs[i]!=NULL && !sf->glyphs[i]->ticked )
+	    SCConvertRefs(sf->glyphs[i],layer);
+
+	if ( layer!=ly_back )
+	    for ( i=0; i<sf->glyphcnt; ++i ) if ( sf->glyphs[i]!=NULL )
+		SCNumberPoints(sf->glyphs[i],layer);
+	++k;
+    } while ( k<_sf->subfontcnt );
+    _sf->layers[layer].order2 = true;
+}
+
+void SFConvertGridToOrder2(SplineFont *_sf) {
+    int k;
+    SplineSet *new;
+    SplineFont *sf;
+
+    if ( _sf->cidmaster!=NULL ) _sf=_sf->cidmaster;
+    k = 0;
+    do {
+	sf = _sf->subfonts==NULL ? _sf : _sf->subfonts[k];
+
+	new = SplineSetsTTFApprox(sf->grid.splines);
+	SplinePointListsFree(sf->grid.splines);
+	sf->grid.splines = new;
+
+	sf->grid.order2 = true;
+	++k;
+    } while ( k<_sf->subfontcnt );
+    _sf->grid.order2 = true;
+}
+
+void SFConvertToOrder2(SplineFont *_sf) {
+    int layer;
+
+    for ( layer=0; layer<_sf->layer_cnt; ++layer )
+	SFConvertLayerToOrder2(_sf,layer);
+    SFConvertGridToOrder2(_sf);
+}
+
 
 /* ************************************************************************** */
 

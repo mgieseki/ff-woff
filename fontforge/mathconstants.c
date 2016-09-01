@@ -25,6 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stddef.h>
 #include "fontforgevw.h"
 #ifdef __need_size_t
 /* This is a bug on the mac, someone defines this and leaves it defined */

@@ -2219,6 +2219,8 @@ extern void SplineRefigure2(Spline *spline);
 extern void SplineRefigureFixup(Spline *spline);
 extern Spline *SplineMake2(SplinePoint *from, SplinePoint *to);
 extern Spline *SplineMake(SplinePoint *from, SplinePoint *to, int order2);
+extern void SCConvertToOrder2(SplineChar *sc);
+extern void SFConvertToOrder2(SplineFont *sf);
 extern int IntersectLines(BasePoint *inter,
 	BasePoint *line1_1, BasePoint *line1_2,
 	BasePoint *line2_1, BasePoint *line2_2);
@@ -2277,6 +2279,11 @@ typedef struct globalinstrct {
     StdStem  *stemsnapv;   /* StdVW excluded */
     int      stemsnapvcnt;
 } GlobalInstrCt;
+
+extern void InitGlobalInstrCt( GlobalInstrCt *gic,SplineFont *sf,int layer,
+	BlueData *bd );
+extern void FreeGlobalInstrCt( GlobalInstrCt *gic );
+extern void NowakowskiSCAutoInstr( GlobalInstrCt *gic,SplineChar *sc );
 
 extern void SCClearHintMasks(SplineChar *sc,int layer,int counterstoo);
 extern void SCFigureHintMasks(SplineChar *sc,int layer);
