@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.3)
 project(ff-woff)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(SOURCE_FILES
@@ -24,13 +23,16 @@ set(SOURCE_FILES
 	fontforge/ttf.h
 	fontforge/ttfinstrs.h
 	fontforge/uiinterface.h
+	fontforge/alphabet.c
 	fontforge/asmfpst.c
 	fontforge/autohint.c
 	fontforge/char.c
+	fontforge/cjk.c
 	fontforge/cvundoes.c
 	fontforge/dumppfa.c
 	fontforge/encoding.c
 	fontforge/fvfonts.c
+	fontforge/gwwiconv.c
 	fontforge/lookups.c
 	fontforge/macbinary.c
 	fontforge/macenc.c
@@ -73,13 +75,8 @@ set(SOURCE_FILES
 include_directories(fontforge)
 include_directories(inc)
 
-find_package(ICONV REQUIRED)
 find_package(ZLIB REQUIRED)
-
-if (ICONV_FOUND)
-add_definitions(-DHAVE_ICONV)
-endif ()
 
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCE_FILES})
 add_library(${CMAKE_PROJECT_NAME}-static STATIC ${SOURCE_FILES})
-target_link_libraries(${CMAKE_PROJECT_NAME} ${ZLIB_LIBRARIES} ${ICONV_LIBRARY})
+target_link_libraries(${CMAKE_PROJECT_NAME} ${ZLIB_LIBRARIES})
