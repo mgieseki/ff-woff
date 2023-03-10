@@ -1,3 +1,5 @@
+#### This repository has been archived since [dvisvgm](https://github.com/mgieseki/dvisvgm) no longer depends on the FontForge library.
+
 # Reduced FontForge library for dvisvgm
 
 This is a radically reduced version of the [FontForge](https://fontforge.github.io) library required to natively
